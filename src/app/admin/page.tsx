@@ -45,6 +45,8 @@ export default function AdminDashboard() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [activeTab, setActiveTab] = useState('products')
+  const [currency, setCurrency] = useState<'USD' | 'IDR'>('USD')
+  const [exchangeRate] = useState(15750) // 1 USD = 15,750 IDR
   const [formData, setFormData] = useState({
     name: '',
     artist: '',
@@ -201,14 +203,29 @@ export default function AdminDashboard() {
 
   const getFormatColor = (format: string) => {
     switch(format.toLowerCase()) {
-      case 'vinyl': return 'bg-red-900 text-red-100'
-      case 'cd': return 'bg-gray-700 text-gray-100'
-      case 'cassette': return 'bg-orange-900 text-orange-100'
-      case 'shirt': return 'bg-purple-900 text-purple-100'
-      case 'patch': return 'bg-green-900 text-green-100'
-      case 'accessory': return 'bg-blue-900 text-blue-100'
-      default: return 'bg-gray-800 text-gray-100'
+      case 'vinyl': return 'bg-black text-white'
+      case 'cd': return 'bg-gray-800 text-white'
+      case 'cassette': return 'bg-gray-700 text-white'
+      case 'shirt': return 'bg-gray-600 text-white'
+      case 'patch': return 'bg-gray-500 text-white'
+      case 'accessory': return 'bg-gray-400 text-white'
+      default: return 'bg-gray-300 text-black'
     }
+  }
+
+  const convertPrice = (price: number) => {
+    if (currency === 'IDR') {
+      return Math.round(price * exchangeRate)
+    }
+    return price
+  }
+
+  const formatPrice = (price: number) => {
+    const convertedPrice = convertPrice(price)
+    if (currency === 'IDR') {
+      return `Rp ${convertedPrice.toLocaleString('id-ID')}`
+    }
+    return `$${convertedPrice.toFixed(2)}`
   }
 
   if (loading) {
@@ -233,6 +250,15 @@ export default function AdminDashboard() {
               <h1 className="text-2xl font-bold text-black">BLACKMARCH ADMIN</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <Select value={currency} onValueChange={(value: 'USD' | 'IDR') => setCurrency(value)}>
+                <SelectTrigger className="bg-white border-gray-300 text-black w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-300">
+                  <SelectItem value="USD">USD $</SelectItem>
+                  <SelectItem value="IDR">IDR Rp</SelectItem>
+                </SelectContent>
+              </Select>
               <Button 
                 variant="outline" 
                 className="border-black text-black hover:bg-black hover:text-white"
@@ -300,7 +326,7 @@ export default function AdminDashboard() {
                           {product.genre} • {product.subgenre}
                         </p>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                          <span>Price: ${product.price.toFixed(2)}</span>
+                          <span>Price: {formatPrice(product.price)}</span>
                           {product.year && <span>Year: {product.year}</span>}
                           {product.label && <span>Label: {product.label}</span>}
                         </div>
